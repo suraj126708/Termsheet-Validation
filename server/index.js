@@ -26,6 +26,10 @@ app.use("/attendance", attendanceRoutes);
 app.use("/contact", ContactRoute);
 app.use("/workers", workerRoute);
 
+app.get("/ping" , (req , res )=> {
+  res.send("hello server");
+});
+
 app.listen(PORT, () => {
   console.log(`server is running on port ${PORT}`);
 });
