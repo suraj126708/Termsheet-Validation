@@ -29,7 +29,7 @@ const NavBar = ({ id }) => {
   const fileName = profilepic ? profilepic.split("\\").pop() : null;
 
   const profilePicUrl = fileName
-    ? `https://coal-mines-backend.onrender.com/uploads/${fileName}`
+    ? `https://coal-mines-backend.onrender.com//uploads/${fileName}`
     : "https://flowbite.com/docs/images/people/profile-picture-3.jpg";
 
   return (
