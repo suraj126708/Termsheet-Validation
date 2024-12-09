@@ -27,7 +27,6 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
 
-            <Route path="/" element={<HeroPage />} />
             <Route path="/contact" element={<ContactUs />} />
             <Route path="/about" element={<About />} />
 
@@ -36,6 +35,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Attendance />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <HeroPage />
                 </ProtectedRoute>
               }
             />
