@@ -70,9 +70,13 @@ const ProfilePage = () => {
     }
   }, [navigate]);
 
-  const BASE_URL = "https://coal-mines-backend.onrender.com/uploads/";
+
+const profilepic = localStorage.getItem("profilePicture");
   const fileName = profilepic ? profilepic.split("/").pop() : null;
-  const profilepic = fileName ? `${BASE_URL}${fileName}` : null;
+
+  const profilepic = fileName
+    ? `https://coal-mines-backend.onrender.com//uploads/${fileName}`
+    : "https://flowbite.com/docs/images/people/profile-picture-3.jpg";
 
   if (!userDetails)
     return (
