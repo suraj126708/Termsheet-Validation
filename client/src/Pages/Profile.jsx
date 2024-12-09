@@ -56,7 +56,7 @@ const ProfilePage = () => {
           );
 
           if (!response.ok) {
-            throw new Error("Failed to fetch user details");
+            handleError("Failed to fetch user details");
           }
 
           const data = await response.json();
