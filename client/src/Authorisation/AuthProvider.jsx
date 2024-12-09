@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           const response = await axios.get(
-            "http://localhost:8080/auth/verify",
+            "https://coal-mines-backend.onrender.com/auth/verify",
             {
               headers: { Authorization: `Bearer ${token}` },
             }
