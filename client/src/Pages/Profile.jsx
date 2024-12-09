@@ -71,13 +71,13 @@ const ProfilePage = () => {
   }, [navigate]);
 
 
-const profilepic = localStorage.getItem("profilePicture");
-  const fileName = profilepic ? profilepic.split("/").pop() : null;
+const profilepicRaw = localStorage.getItem("profilePicture");
+const fileName = profilepicRaw ? profilepicRaw.split("/").pop() : null;
 
-  const profilepic = fileName
-    ? `https://coal-mines-backend.onrender.com//uploads/${fileName}`
-    : "https://flowbite.com/docs/images/people/profile-picture-3.jpg";
-
+const profilepic = fileName
+  ? `https://coal-mines-backend.onrender.com/uploads/${fileName}`
+  : "https://flowbite.com/docs/images/people/profile-picture-3.jpg";
+  
   if (!userDetails)
     return (
       <div className="h-[100vh] w-[100%] flex justify-center items-center text-center font-serif font-semibold text-2xl">
