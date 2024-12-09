@@ -71,8 +71,8 @@ const ProfilePage = () => {
   }, [navigate]);
 
   const BASE_URL = "https://coal-mines-backend.onrender.com/uploads/";
-  const filename = localStorage.getItem("profilePicture")?.split("\\").pop();
-  const profilepic = filename ? `${BASE_URL}${filename}` : null;
+  const fileName = profilepic ? profilepic.split("/").pop() : null;
+  const profilepic = fileName ? `${BASE_URL}${fileName}` : null;
 
   if (!userDetails)
     return (
