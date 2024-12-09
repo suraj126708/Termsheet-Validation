@@ -6,14 +6,17 @@ import SafetyInformation from "../components/Home3";
 import SafetyAlertsPage from "../components/Home4";
 import WorkerOfTheMonth from "../components/Home5";
 import Footer from "../components/Footer";
+import AuthContext from "../Authorisation/AuthProvider";
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { handleError } from "../utils";
+import { Navigate } from "react-router-dom";
 
 export default function HeroPage() {
   const [userDetails, setUserDetails] = useState(null);
+  const { isAuthenticated } = useContext(AuthContext);
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -28,8 +31,9 @@ export default function HeroPage() {
           }
         );
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch user details");
+        if (!response.ok && !isAuthenticated) {
+          handleError("Failed to fetch user details");
+          Navigate("/login");
         }
 
         const data = await response.json();
