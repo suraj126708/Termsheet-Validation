@@ -26,7 +26,7 @@ const NavBar = ({ id }) => {
   };
 
   const profilepic = localStorage.getItem("profilePicture");
-  const fileName = profilepic ? profilepic.split("\\").pop() : null;
+  const fileName = profilepic ? profilepic.split("/").pop() : null;
 
   const profilePicUrl = fileName
     ? `https://coal-mines-backend.onrender.com//uploads/${fileName}`

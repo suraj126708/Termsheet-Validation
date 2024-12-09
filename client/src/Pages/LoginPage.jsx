@@ -38,6 +38,7 @@ function LoginPage() {
       });
 
       const result = await response.json();
+      console.log(result);
 
       if (!response.ok) {
         const errorMessage = result.message || "Login failed";
