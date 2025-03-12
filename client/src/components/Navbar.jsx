@@ -32,6 +32,8 @@ const NavBar = ({ id }) => {
     ? `https://coal-mines-backend.onrender.com//uploads/${fileName}`
     : "https://flowbite.com/docs/images/people/profile-picture-3.jpg";
 
+  console.log(profilePicUrl);
+
   return (
     <nav
       className={`absolute top-0 w-[100%] ${

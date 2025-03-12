@@ -56,7 +56,7 @@ const ProfilePage = () => {
           );
 
           if (!response.ok) {
-            throw new Error("Failed to fetch user details");
+            handleError("Failed to fetch user details");
           }
 
           const data = await response.json();
@@ -70,10 +70,14 @@ const ProfilePage = () => {
     }
   }, [navigate]);
 
-  const BASE_URL = "https://coal-mines-backend.onrender.com/uploads/";
-  const filename = localStorage.getItem("profilePicture")?.split("\\").pop();
-  const profilepic = filename ? `${BASE_URL}${filename}` : null;
 
+const profilepicRaw = localStorage.getItem("profilePicture");
+const fileName = profilepicRaw ? profilepicRaw.split("/").pop() : null;
+
+const profilepic = fileName
+  ? `https://coal-mines-backend.onrender.com/uploads/${fileName}`
+  : "https://flowbite.com/docs/images/people/profile-picture-3.jpg";
+  
   if (!userDetails)
     return (
       <div className="h-[100vh] w-[100%] flex justify-center items-center text-center font-serif font-semibold text-2xl">
