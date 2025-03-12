@@ -1,37 +1,23 @@
-import Aditya from "../assets/images/Aditya.jpg";
+// import Aditya from "../assets/images/Aditya.jpg";
 
 const Team = () => {
   const teamMembers = [
     {
-      name: "Suraj Gitte",
+      name: "hariom Hinge",
       position: "Developer",
       description:
         "Develops and maintains the platform's functionality for worker tracking and safety.",
       imageUrl:
-        "https://media.licdn.com/dms/image/v2/D4D03AQFPzZ429dRNoQ/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1730815963701?e=1736985600&v=beta&t=CB9JcjrTTCITjbP2rlmM1syAhjWZ1mi7bddnRexhSy0",
+        "https://tse4.mm.bing.net/th?id=OIP.IGNf7GuQaCqz_RPq5wCkPgHaLH&pid=Api&P=0&h=180",
     },
+
     {
-      name: "Dev Jangam",
-      position: "Database Engineer",
-      description:
-        "Manages secure and efficient database access for attendance and safety data.",
-      imageUrl:
-        "https://media.licdn.com/dms/image/v2/D4D03AQHTsPPwpV-P2g/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1703833995680?e=1733961600&v=beta&t=gjYYCK1DgkMrCMWc3ul9ASRvUuIHmoaAMnIcv3xWNWc",
-    },
-    {
-      name: "Aditya Inamdar",
-      position: "Database Designer",
-      description:
-        "Designs structured databases for easy access to worker safety records.",
-      imageUrl: Aditya,
-    },
-    {
-      name: "Rohan Humbe",
+      name: "Ayush Domble",
       position: "Founder",
       description:
         "Initiated the project to enhance coal mine worker safety and tracking.",
       imageUrl:
-        "https://media.licdn.com/dms/image/v2/D4E03AQG7oVv4VbgygQ/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1715880963714?e=1733961600&v=beta&t=qsN8AI0rn61c4ZKUyGQRB5E3S2gj5n4sTneTEHvJfFk",
+        "https://tse4.mm.bing.net/th?id=OIP.IGNf7GuQaCqz_RPq5wCkPgHaLH&pid=Api&P=0&h=180",
     },
   ];
 
@@ -51,7 +37,7 @@ const Team = () => {
                 alt={member.name}
               />
               <div className="text-center">
-                <h3 className="text-xl font-medium text-white">
+                <h3 className="text-xl font-medium text-black">
                   {member.name}
                 </h3>
                 <p className="text-sm text-slate-800">{member.position}</p>
