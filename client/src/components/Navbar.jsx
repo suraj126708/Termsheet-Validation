@@ -3,11 +3,11 @@ import Bgimg from "../assets/images/Logo.png";
 import { useState, useContext } from "react";
 import NavbarAnchor from "./NavbarAnchor";
 import AuthContext from "../Authorisation/AuthProvider";
-import { useNavigate } from "react-router-dom";
-import { handleError } from "../utils";
+// import { useNavigate } from "react-router-dom";
+// import { handleError } from "../utils";
 
 const NavBar = ({ id }) => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const [isOpen, setIsOpen] = useState(false);
   const { isAuthenticated } = useContext(AuthContext);
@@ -16,23 +16,23 @@ const NavBar = ({ id }) => {
     setIsOpen(!isOpen);
   };
 
-  const handleRestrictedRoute = (path) => {
-    const username = localStorage.getItem("loggedInUser");
-    if (username !== "Suraj Gitte") {
-      handleError("You cannot access this page.");
-    } else {
-      navigate(path);
-    }
-  };
+  // const handleRestrictedRoute = (path) => {
+  //   const username = localStorage.getItem("loggedInUser");
+  //   if (username !== "Suraj Gitte") {
+  //     handleError("You cannot access this page.");
+  //   } else {
+  //     navigate(path);
+  //   }
+  // };
 
   const profilepic = localStorage.getItem("profilePicture");
-  const fileName = profilepic ? profilepic.split("/").pop() : null;
+  const fileName = profilepic ? profilepic.split("\\").pop() : null;
+
+  console.log(fileName);
 
   const profilePicUrl = fileName
     ? `http://localhost:8000/uploads/${fileName}`
     : "https://flowbite.com/docs/images/people/profile-picture-3.jpg";
-
-  console.log(profilePicUrl);
 
   return (
     <nav
@@ -119,16 +119,7 @@ const NavBar = ({ id }) => {
           >
             <NavbarAnchor to={"/"} text={"Home"} id={"home"} className={id} />
             <NavbarAnchor to={"/about"} text={"About"} className={id} />
-            {isAuthenticated && (
-              <li>
-                <button
-                  onClick={() => handleRestrictedRoute("/location")}
-                  className=""
-                >
-                  Track Workers
-                </button>
-              </li>
-            )}
+            <NavbarAnchor to={"/upload"} text={"Upload sheet"} className={id} />
             <NavbarAnchor to={"/contact"} text={"Contact"} className={id} />
           </ul>
         </div>

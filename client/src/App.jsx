@@ -10,18 +10,27 @@ import RegisterPage from "./Pages/RegisterPage";
 import ProtectedRoute from "./Authorisation/ProtectedRoute";
 import { AuthProvider } from "./Authorisation/AuthProvider";
 import NavBar from "./components/Navbar";
+import TermSheetUploadPortal from "./Pages/TermSheetUploadPortal";
 
 function App() {
   return (
     <div className="App">
-      <NavBar id="black" />
       <AuthProvider>
         <ToastContainer />
         <BrowserRouter>
+          <NavBar id="black" />
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
 
+            <Route
+              path="/upload"
+              element={
+                <ProtectedRoute>
+                  <TermSheetUploadPortal />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/"
               element={
