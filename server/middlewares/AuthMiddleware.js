@@ -14,7 +14,6 @@ const signUpValidation = (req, res, next) => {
     address: joi.string().min(5).required(),
     age: joi.number().integer().min(18).required(),
     gender: joi.string().valid("male", "female", "other").required(),
-    workerID: joi.string().required(),
   });
   const { error } = schema.validate(req.body);
   if (error) {

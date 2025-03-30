@@ -4,10 +4,6 @@ const cors = require("cors");
 const path = require("path");
 
 const AuthRouter = require("./routes/AuthRouter");
-const ProductsRouter = require("./routes/ProductsRouter");
-const attendanceRoutes = require("./routes/attendanceRoutes");
-const ContactRoute = require("./routes/ContactRoute");
-const workerRoute = require("./routes/workerRoute");
 
 const app = express();
 require("dotenv").config();
@@ -21,12 +17,8 @@ app.use(cors());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/auth", AuthRouter);
-app.use("/userinfo", ProductsRouter);
-app.use("/attendance", attendanceRoutes);
-app.use("/contact", ContactRoute);
-app.use("/workers", workerRoute);
 
-app.get("/ping" , (req , res )=> {
+app.get("/ping", (req, res) => {
   res.send("hello server");
 });
 

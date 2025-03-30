@@ -6,8 +6,7 @@ const path = require("path");
 // Sign Up Controller
 const signUp = async (req, res) => {
   try {
-    const { name, email, password, contact, address, age, gender, workerID } =
-      req.body;
+    const { name, email, password, contact, address, age, gender } = req.body;
 
     const existingUser = await userModel.findOne({ email });
     if (existingUser) {
@@ -30,7 +29,6 @@ const signUp = async (req, res) => {
       address,
       age,
       gender,
-      workerID,
       profilePicture,
     });
 

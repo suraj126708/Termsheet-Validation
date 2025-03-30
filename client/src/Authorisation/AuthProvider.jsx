@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           const response = await axios.get(
-            "https://coal-mines-backend.onrender.com/auth/verify",
+            "http://localhost:8000/auth/verify",
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -57,14 +57,12 @@ export const AuthProvider = ({ children }) => {
             setUser(response.data.user);
             setIsAuthenticated(true);
           } else {
-            logout();
+            // logout();
           }
         } catch (error) {
           console.error("Token verification failed:", error);
-          logout();
+          // logout();
         }
-      } else {
-        logout();
       }
     };
     verifyToken();

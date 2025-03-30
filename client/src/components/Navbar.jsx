@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import Bgimg from "../assets/images/logo.svg";
+import Bgimg from "../assets/images/Logo.png";
 import { useState, useContext } from "react";
 import NavbarAnchor from "./NavbarAnchor";
 import AuthContext from "../Authorisation/AuthProvider";
@@ -29,7 +29,7 @@ const NavBar = ({ id }) => {
   const fileName = profilepic ? profilepic.split("/").pop() : null;
 
   const profilePicUrl = fileName
-    ? `https://coal-mines-backend.onrender.com//uploads/${fileName}`
+    ? `http://localhost:8000/uploads/${fileName}`
     : "https://flowbite.com/docs/images/people/profile-picture-3.jpg";
 
   console.log(profilePicUrl);
@@ -41,7 +41,7 @@ const NavBar = ({ id }) => {
       }`}
     >
       <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto">
-        <a href="/" className="flex items-center space-x-3">
+        <a href="/" className="space-x-3">
           <img src={Bgimg} className="h-28 z-40" alt="Fit4You Logo" id="logo" />
         </a>
         <div className="flex items-center md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">

@@ -28,7 +28,7 @@ function LoginPage() {
     setErrors(null);
 
     try {
-      const url = "https://coal-mines-backend.onrender.com/auth/login";
+      const url = "http://localhost:8000/auth/login";
       const response = await fetch(url, {
         method: "POST",
         headers: {
@@ -68,7 +68,6 @@ function LoginPage() {
 
   return (
     <>
-      <NavBar id="black" />
       <div className="h-[100vh] flex items-center justify-center">
         <div className="bg-slate-50 bg-opacity-60 p-8 rounded shadow-md w-full max-w-md">
           <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>

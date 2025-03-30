@@ -1,8 +1,7 @@
 import axios from "axios";
-import { useHistory } from "react-router-dom"; // Assuming you're using react-router
 
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:8080",
+  baseURL: "http://localhost:8000",
 });
 
 axiosInstance.interceptors.request.use((config) => {

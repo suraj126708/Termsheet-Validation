@@ -17,7 +17,6 @@ function RegisterPage() {
     address: "",
     age: "",
     gender: "",
-    workerID: "",
     profilePicture: null,
   });
 
@@ -85,10 +84,6 @@ function RegisterPage() {
       newErrors.gender = "Gender is required.";
     }
 
-    if (!formData.workerID.trim()) {
-      newErrors.workerID = "Worker ID is required.";
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -102,7 +97,7 @@ function RegisterPage() {
 
     setLoading(true);
 
-    const url = "https://coal-mines-backend.onrender.com/auth/signup";
+    const url = "http://localhost:8000/auth/signup";
 
     const formDataToSend = new FormData();
     Object.keys(formData).forEach((key) => {
@@ -147,12 +142,9 @@ function RegisterPage() {
 
   return (
     <>
-      <NavBar id="black" />
       <div className="h-auto mt-24 flex items-center justify-center ">
         <div className="bg-slate-50 bg-opacity-60 p-8 rounded shadow-md my-4 w-full max-w-2xl">
-          <h2 className="text-2xl font-bold mb-6 text-center">
-            Worker Registration
-          </h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">Registration</h2>
 
           <form onSubmit={handleSubmit} encType="multipart/form-data">
             {[
@@ -197,12 +189,6 @@ function RegisterPage() {
                 id: "age",
                 type: "text",
                 placeholder: "Enter your age",
-              },
-              {
-                label: "Worker ID",
-                id: "workerID",
-                type: "text",
-                placeholder: "Enter your Worker ID",
               },
             ].map(({ label, id, type, placeholder }) => (
               <div className="mb-4" key={id}>
