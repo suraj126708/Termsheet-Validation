@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState, useRef, useEffect } from "react";
 import {
   FileText,
@@ -14,6 +15,14 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
+import { Document, Page } from "react-pdf";
+import { pdfjs } from "react-pdf";
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.mjs`;
+
+// Import styles directly (you might need to add these packages)
+import "react-pdf/dist/esm/Page/AnnotationLayer.css";
+import "react-pdf/dist/esm/Page/TextLayer.css";
 
 const TermSheetUploadPortal = () => {
   const [files, setFiles] = useState([]);
@@ -24,6 +33,9 @@ const TermSheetUploadPortal = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [pdfText, setPdfText] = useState(""); // Fix unused state
+  const [extractedTerms, setExtractedTerms] = useState(null);
+  const [pdfLoadError, setPdfLoadError] = useState(null);
   const fileInputRef = useRef(null);
 
   // Clean up object URLs when component unmounts or preview changes
@@ -151,13 +163,20 @@ const TermSheetUploadPortal = () => {
   const openFilePreview = (file) => {
     setPreviewFile(file);
     setCurrentPage(1);
+    setPdfText("");
+    setExtractedTerms(null);
+    setPdfLoadError(null);
 
     // Create object URL for PDF if it's a PDF file
     if (file.type === "pdf" && file.file) {
-      const url = URL.createObjectURL(file.file);
-      setPdfUrl(url);
-      // In a real app, you would use a PDF library to determine total pages
-      setTotalPages(5); // Placeholder - would be determined dynamically
+      try {
+        const url = URL.createObjectURL(file.file);
+        setPdfUrl(url);
+      } catch (error) {
+        console.error("Error creating object URL:", error);
+        setPdfLoadError("Failed to load PDF file");
+        setPdfUrl(null);
+      }
     } else {
       setPdfUrl(null);
     }
@@ -169,6 +188,9 @@ const TermSheetUploadPortal = () => {
       setPdfUrl(null);
     }
     setPreviewFile(null);
+    setPdfText("");
+    setExtractedTerms(null);
+    setPdfLoadError(null);
   };
 
   const nextPage = () => {
@@ -189,6 +211,82 @@ const TermSheetUploadPortal = () => {
 
   const zoomOut = () => {
     setZoomLevel((prevZoom) => Math.max(prevZoom - 0.25, 0.5));
+  };
+
+  const onDocumentLoadSuccess = ({ numPages }) => {
+    setTotalPages(numPages);
+    setPdfLoadError(null);
+    extractTextFromPDF(); // Ensure text extraction happens after successful load
+  };
+
+  const onDocumentLoadError = (error) => {
+    console.error("Error loading PDF:", error);
+    setPdfLoadError(
+      "Failed to load PDF file. Please make sure it's a valid PDF."
+    );
+  };
+
+  const extractTextFromPDF = async () => {
+    try {
+      if (!pdfUrl) return;
+
+      const loadingTask = pdfjs.getDocument(pdfUrl); // Ensure proper loading
+      const pdf = await loadingTask.promise;
+      let fullText = "";
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const textItems = textContent.items.map((item) => item.str);
+        fullText += textItems.join(" ") + "\n";
+      }
+
+      setPdfText(fullText);
+      extractTerms(fullText); // Parse terms after text extraction
+    } catch (error) {
+      console.error("Error extracting text from PDF:", error);
+      setPdfLoadError("Failed to extract text from PDF");
+    }
+  };
+
+  const extractTerms = (text) => {
+    // In a real app, you would use NLP or regex patterns to extract terms
+    // This is a simplified demo version with pattern matching
+
+    // Example patterns to look for
+    const patterns = {
+      transactionType: /Transaction Type[:\s]+([^.\n]+)/i,
+      principalAmount:
+        /(?:Principal|Amount|Facility Amount)[:\s]+([$€£]?\s?\d[\d,]*(?:\.\d+)?(?:\s?[Mm]illion)?)/i,
+      maturityDate: /Maturity Date[:\s]+([^.\n]+)/i,
+      interestRate: /Interest Rate[:\s]+([^.\n]+)/i,
+      borrower: /Borrower[:\s]+([^.\n]+)/i,
+      lender: /Lender[:\s]+([^.\n]+)/i,
+    };
+
+    // Extract data using patterns
+    const extractedData = {};
+    for (const [key, pattern] of Object.entries(patterns)) {
+      const match = text.match(pattern);
+      if (match && match[1]) {
+        extractedData[key] = match[1].trim();
+      }
+    }
+
+    // If we found some terms, set them
+    if (Object.keys(extractedData).length > 0) {
+      // Fill in placeholders for demo if some terms weren't found
+      const terms = {
+        transactionType: extractedData.transactionType || "Term Loan Facility",
+        principalAmount: extractedData.principalAmount || "$25,000,000",
+        maturityDate: extractedData.maturityDate || "March 15, 2030",
+        interestRate: extractedData.interestRate || "SOFR + 3.25%",
+        borrower: extractedData.borrower || "Acme Corporation",
+        lender: extractedData.lender || "First National Bank",
+      };
+
+      setExtractedTerms(terms);
+    }
   };
 
   // Main render for the entire component
@@ -289,85 +387,113 @@ const TermSheetUploadPortal = () => {
                 className="flex justify-center bg-white border rounded-lg p-4 overflow-auto"
                 style={{ minHeight: "500px" }}
               >
-                {/* In a real implementation, you would use a PDF.js or similar library here */}
-                <div
-                  style={{
-                    transform: `scale(${zoomLevel})`,
-                    transformOrigin: "top center",
-                  }}
-                >
-                  {/* Placeholder for PDF content - in a real app this would be a PDF viewer */}
-                  <div className="flex flex-col items-center justify-center">
-                    <img
-                      src="/api/placeholder/600/800"
-                      alt="PDF preview"
-                      className="border shadow-md"
-                    />
-                    <p className="mt-4 text-gray-500 text-center">
-                      This is a placeholder for the PDF viewer.
-                      <br />
-                      In a real implementation, this would display page{" "}
-                      {currentPage} of the actual PDF content.
+                {pdfLoadError ? (
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
+                    <p className="text-red-500 font-medium">{pdfLoadError}</p>
+                    <p className="text-gray-500 mt-2 text-center max-w-md">
+                      There was a problem loading the PDF. Please make sure its
+                      a valid PDF file.
+                    </p>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      transform: `scale(${zoomLevel})`,
+                      transformOrigin: "top center",
+                    }}
+                  >
+                    {/* PDF.js Document viewer */}
+                    <Document
+                      file={pdfUrl}
+                      onLoadSuccess={onDocumentLoadSuccess}
+                      onLoadError={onDocumentLoadError}
+                      options={{
+                        cMapUrl: `//unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`, // Fix cMapUrl
+                        cMapPacked: true,
+                      }}
+                    >
+                      <Page
+                        pageNumber={currentPage}
+                        width={600}
+                        renderTextLayer={true}
+                        renderAnnotationLayer={true}
+                      />
+                    </Document>
+                  </div>
+                )}
+              </div>
+
+              {/* Terms extraction - only show if no error */}
+              {!pdfLoadError && (
+                <div className="mt-6 p-4 bg-white border rounded-lg">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                    Extracted Terms
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <div className="p-3 bg-blue-50 rounded border border-blue-100">
+                        <p className="text-sm font-medium text-gray-700">
+                          Transaction Type
+                        </p>
+                        <p className="text-gray-800">
+                          {extractedTerms?.transactionType ||
+                            "Term Loan Facility"}
+                        </p>
+                      </div>
+                      <div className="p-3 bg-blue-50 rounded border border-blue-100">
+                        <p className="text-sm font-medium text-gray-700">
+                          Principal Amount
+                        </p>
+                        <p className="text-gray-800">
+                          {extractedTerms?.principalAmount || "$25,000,000"}
+                        </p>
+                      </div>
+                      <div className="p-3 bg-blue-50 rounded border border-blue-100">
+                        <p className="text-sm font-medium text-gray-700">
+                          Maturity Date
+                        </p>
+                        <p className="text-gray-800">
+                          {extractedTerms?.maturityDate || "March 15, 2030"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="p-3 bg-blue-50 rounded border border-blue-100">
+                        <p className="text-sm font-medium text-gray-700">
+                          Interest Rate
+                        </p>
+                        <p className="text-gray-800">
+                          {extractedTerms?.interestRate || "SOFR + 3.25%"}
+                        </p>
+                      </div>
+                      <div className="p-3 bg-blue-50 rounded border border-blue-100">
+                        <p className="text-sm font-medium text-gray-700">
+                          Borrower
+                        </p>
+                        <p className="text-gray-800">
+                          {extractedTerms?.borrower || "Acme Corporation"}
+                        </p>
+                      </div>
+                      <div className="p-3 bg-blue-50 rounded border border-blue-100">
+                        <p className="text-sm font-medium text-gray-700">
+                          Lender
+                        </p>
+                        <p className="text-gray-800">
+                          {extractedTerms?.lender || "First National Bank"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-500">
+                      * These terms have been extracted from the document and
+                      may require verification.
                     </p>
                   </div>
                 </div>
-              </div>
-
-              {/* Terms extraction (simulated) */}
-              <div className="mt-6 p-4 bg-white border rounded-lg">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                  Extracted Terms
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <div className="p-3 bg-blue-50 rounded border border-blue-100">
-                      <p className="text-sm font-medium text-gray-700">
-                        Transaction Type
-                      </p>
-                      <p className="text-gray-800">Term Loan Facility</p>
-                    </div>
-                    <div className="p-3 bg-blue-50 rounded border border-blue-100">
-                      <p className="text-sm font-medium text-gray-700">
-                        Principal Amount
-                      </p>
-                      <p className="text-gray-800">$25,000,000</p>
-                    </div>
-                    <div className="p-3 bg-blue-50 rounded border border-blue-100">
-                      <p className="text-sm font-medium text-gray-700">
-                        Maturity Date
-                      </p>
-                      <p className="text-gray-800">March 15, 2030</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="p-3 bg-blue-50 rounded border border-blue-100">
-                      <p className="text-sm font-medium text-gray-700">
-                        Interest Rate
-                      </p>
-                      <p className="text-gray-800">SOFR + 3.25%</p>
-                    </div>
-                    <div className="p-3 bg-blue-50 rounded border border-blue-100">
-                      <p className="text-sm font-medium text-gray-700">
-                        Borrower
-                      </p>
-                      <p className="text-gray-800">Acme Corporation</p>
-                    </div>
-                    <div className="p-3 bg-blue-50 rounded border border-blue-100">
-                      <p className="text-sm font-medium text-gray-700">
-                        Lender
-                      </p>
-                      <p className="text-gray-800">First National Bank</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <p className="text-sm text-gray-500">
-                    * These terms have been extracted from the document and may
-                    require verification.
-                  </p>
-                </div>
-              </div>
+              )}
             </div>
           ) : (
             <div

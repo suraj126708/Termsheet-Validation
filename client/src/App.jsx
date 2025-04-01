@@ -11,6 +11,7 @@ import ProtectedRoute from "./Authorisation/ProtectedRoute";
 import { AuthProvider } from "./Authorisation/AuthProvider";
 import NavBar from "./components/Navbar";
 import TermSheetUploadPortal from "./Pages/TermSheetUploadPortal";
+import PDFTextExtractor from "./components/ExtractTextFromPdf";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/extract" element={<PDFTextExtractor />} />
 
             <Route
               path="/upload"
