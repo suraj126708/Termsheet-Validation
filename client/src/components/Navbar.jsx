@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import Bgimg from "../assets/images/Logo.png";
+import Bgimg from "../assets/Images/Logo.png";
 import { useState, useContext } from "react";
 import NavbarAnchor from "./NavbarAnchor";
 import AuthContext from "../Authorisation/AuthProvider";
