@@ -28,7 +28,7 @@ function LoginPage() {
     setErrors(null);
 
     try {
-      const url = "http://localhost:8000/auth/login";
+      const url = "https://termsheet-validation-api.onrender.com/auth/login";
       const response = await fetch(url, {
         method: "POST",
         headers: {

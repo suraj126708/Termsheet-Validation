@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           const response = await axios.get(
-            "http://localhost:8000/auth/verify",
+            "https://termsheet-validation-api.onrender.com/auth/verify",
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -57,11 +57,11 @@ export const AuthProvider = ({ children }) => {
             setUser(response.data.user);
             setIsAuthenticated(true);
           } else {
-            // logout();
+            logout();
           }
         } catch (error) {
           console.error("Token verification failed:", error);
-          // logout();
+          logout();
         }
       }
     };

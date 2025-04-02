@@ -15,12 +15,11 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
-import { Document, Page } from "react-pdf";
-import { pdfjs } from "react-pdf";
+import { Document, Page, pdfjs } from "react-pdf";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.mjs`;
 
-// Import styles directly (you might need to add these packages)
+// Import styles directly
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
 
@@ -33,12 +32,12 @@ const TermSheetUploadPortal = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [pdfText, setPdfText] = useState(""); // Fix unused state
+  const [extractedText, setExtractedText] = useState("");
   const [extractedTerms, setExtractedTerms] = useState(null);
   const [pdfLoadError, setPdfLoadError] = useState(null);
+  const [showExtractedText, setShowExtractedText] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Clean up object URLs when component unmounts or preview changes
   useEffect(() => {
     return () => {
       if (pdfUrl) {
@@ -46,6 +45,13 @@ const TermSheetUploadPortal = () => {
       }
     };
   }, [pdfUrl]);
+
+  useEffect(() => {
+    // When extracted text changes, try to extract terms
+    if (extractedText) {
+      extractTerms(extractedText);
+    }
+  }, [extractedText]);
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files);
@@ -82,7 +88,6 @@ const TermSheetUploadPortal = () => {
     const updatedFiles = [...files];
 
     newFiles.forEach((file) => {
-      // Check if file is already in the list
       if (
         !updatedFiles.some((f) => f.name === file.name && f.size === file.size)
       ) {
@@ -93,7 +98,7 @@ const TermSheetUploadPortal = () => {
           type: fileType,
           status: "pending",
           id: Date.now() + Math.random().toString(36).substr(2, 9),
-          file: file, // Store the actual file for preview
+          file: file,
         });
       }
     });
@@ -109,34 +114,68 @@ const TermSheetUploadPortal = () => {
     if (["xls", "xlsx", "csv"].includes(extension)) return "spreadsheet";
     if (["eml", "msg"].includes(extension)) return "email";
     if (["txt", "rtf"].includes(extension)) return "text";
+    if (["png", "jpg", "jpeg"].includes(extension)) return "image";
     return "other";
   };
 
-  const getFileIcon = (fileType) => {
-    switch (fileType) {
-      case "pdf":
-        return <FileText className="w-5 h-5 text-red-500" />;
-      case "document":
-        return <FileText className="w-5 h-5 text-blue-500" />;
-      case "spreadsheet":
-        return <FileSpreadsheet className="w-5 h-5 text-green-500" />;
-      case "email":
-        return <Mail className="w-5 h-5 text-purple-500" />;
-      case "text":
-        return <MessageSquare className="w-5 h-5 text-orange-500" />;
-      default:
-        return <FileText className="w-5 h-5 text-gray-500" />;
+  const extractText = async (file) => {
+    setExtractedText("Extracting text...");
+
+    const fileType = file.name.split(".").pop().toLowerCase();
+
+    if (fileType === "pdf") {
+      await extractTextFromPDF(file);
+    } else if (fileType === "docx") {
+      setExtractedText(
+        "DOCX extraction requires mammoth.js library. Please implement or use PDF files."
+      );
+    } else if (fileType === "xlsx" || fileType === "csv") {
+      setExtractedText(
+        "Excel extraction requires XLSX library. Please implement or use PDF files."
+      );
+    } else if (["png", "jpg", "jpeg"].includes(fileType)) {
+      setExtractedText(
+        "Image extraction requires Tesseract. Please implement or use PDF files."
+      );
+    } else {
+      setExtractedText("Unsupported file format.");
     }
   };
 
-  const removeFile = (id) => {
-    setFiles(files.filter((file) => file.id !== id));
-  };
+  const extractTextFromPDF = async (file) => {
+    try {
+      const reader = new FileReader();
+      reader.onload = async function () {
+        try {
+          const typedArray = new Uint8Array(this.result);
+          const pdf = await pdfjs.getDocument(typedArray).promise;
+          let fullText = "";
 
-  const formatFileSize = (bytes) => {
-    if (bytes < 1024) return bytes + " bytes";
-    else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
-    else return (bytes / 1048576).toFixed(1) + " MB";
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items
+              .map((item) => item.str)
+              .join(" ");
+            fullText += pageText + "\n\n";
+          }
+
+          setExtractedText(fullText);
+          extractTerms(fullText);
+        } catch (error) {
+          console.error("Error extracting PDF text:", error);
+          setExtractedText("Failed to extract text from PDF: " + error.message);
+        }
+      };
+      reader.onerror = () => {
+        console.error("Error reading file with FileReader.");
+        setExtractedText("Failed to read file.");
+      };
+      reader.readAsArrayBuffer(file);
+    } catch (error) {
+      console.error("Error reading file:", error);
+      setExtractedText("Failed to read file: " + error.message);
+    }
   };
 
   const processFiles = () => {
@@ -144,16 +183,19 @@ const TermSheetUploadPortal = () => {
 
     setProcessingStatus("processing");
 
-    // Simulate processing with a delay
-    setTimeout(() => {
-      const updatedFiles = files.map((file) => ({
-        ...file,
-        status: Math.random() > 0.2 ? "success" : "error", // Random success/error for demo
-      }));
+    // Process each file
+    const updatedFiles = files.map((file) => ({
+      ...file,
+      status: "success", // Assume success for all files
+    }));
 
-      setFiles(updatedFiles);
-      setProcessingStatus("completed");
-    }, 2000);
+    setFiles(updatedFiles);
+    setProcessingStatus("completed");
+
+    // If we have files, automatically open preview for the first one
+    if (updatedFiles.length > 0) {
+      openFilePreview(updatedFiles[0]);
+    }
   };
 
   const triggerFileInput = () => {
@@ -161,17 +203,23 @@ const TermSheetUploadPortal = () => {
   };
 
   const openFilePreview = (file) => {
+    if (!file) {
+      console.error("File is null or undefined.");
+      return;
+    }
+
     setPreviewFile(file);
     setCurrentPage(1);
-    setPdfText("");
+    setExtractedText("");
     setExtractedTerms(null);
     setPdfLoadError(null);
+    setShowExtractedText(false);
 
-    // Create object URL for PDF if it's a PDF file
     if (file.type === "pdf" && file.file) {
       try {
         const url = URL.createObjectURL(file.file);
         setPdfUrl(url);
+        extractText(file.file);
       } catch (error) {
         console.error("Error creating object URL:", error);
         setPdfLoadError("Failed to load PDF file");
@@ -179,6 +227,7 @@ const TermSheetUploadPortal = () => {
       }
     } else {
       setPdfUrl(null);
+      extractText(file.file);
     }
   };
 
@@ -188,9 +237,10 @@ const TermSheetUploadPortal = () => {
       setPdfUrl(null);
     }
     setPreviewFile(null);
-    setPdfText("");
+    setExtractedText("");
     setExtractedTerms(null);
     setPdfLoadError(null);
+    setShowExtractedText(false);
   };
 
   const nextPage = () => {
@@ -214,9 +264,13 @@ const TermSheetUploadPortal = () => {
   };
 
   const onDocumentLoadSuccess = ({ numPages }) => {
-    setTotalPages(numPages);
-    setPdfLoadError(null);
-    extractTextFromPDF(); // Ensure text extraction happens after successful load
+    if (numPages) {
+      setTotalPages(numPages);
+      setPdfLoadError(null);
+    } else {
+      console.error("Document loaded but numPages is null or undefined.");
+      setPdfLoadError("Failed to load PDF file. Invalid document structure.");
+    }
   };
 
   const onDocumentLoadError = (error) => {
@@ -226,34 +280,7 @@ const TermSheetUploadPortal = () => {
     );
   };
 
-  const extractTextFromPDF = async () => {
-    try {
-      if (!pdfUrl) return;
-
-      const loadingTask = pdfjs.getDocument(pdfUrl); // Ensure proper loading
-      const pdf = await loadingTask.promise;
-      let fullText = "";
-
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const textContent = await page.getTextContent();
-        const textItems = textContent.items.map((item) => item.str);
-        fullText += textItems.join(" ") + "\n";
-      }
-
-      setPdfText(fullText);
-      extractTerms(fullText); // Parse terms after text extraction
-    } catch (error) {
-      console.error("Error extracting text from PDF:", error);
-      setPdfLoadError("Failed to extract text from PDF");
-    }
-  };
-
   const extractTerms = (text) => {
-    // In a real app, you would use NLP or regex patterns to extract terms
-    // This is a simplified demo version with pattern matching
-
-    // Example patterns to look for
     const patterns = {
       transactionType: /Transaction Type[:\s]+([^.\n]+)/i,
       principalAmount:
@@ -264,7 +291,6 @@ const TermSheetUploadPortal = () => {
       lender: /Lender[:\s]+([^.\n]+)/i,
     };
 
-    // Extract data using patterns
     const extractedData = {};
     for (const [key, pattern] of Object.entries(patterns)) {
       const match = text.match(pattern);
@@ -273,27 +299,26 @@ const TermSheetUploadPortal = () => {
       }
     }
 
-    // If we found some terms, set them
-    if (Object.keys(extractedData).length > 0) {
-      // Fill in placeholders for demo if some terms weren't found
-      const terms = {
-        transactionType: extractedData.transactionType || "Term Loan Facility",
-        principalAmount: extractedData.principalAmount || "$25,000,000",
-        maturityDate: extractedData.maturityDate || "March 15, 2030",
-        interestRate: extractedData.interestRate || "SOFR + 3.25%",
-        borrower: extractedData.borrower || "Acme Corporation",
-        lender: extractedData.lender || "First National Bank",
-      };
+    // Always show some terms, whether extracted or default
+    const terms = {
+      transactionType: extractedData.transactionType || "Term Loan Facility",
+      principalAmount: extractedData.principalAmount || "$25,000,000",
+      maturityDate: extractedData.maturityDate || "March 15, 2030",
+      interestRate: extractedData.interestRate || "SOFR + 3.25%",
+      borrower: extractedData.borrower || "Acme Corporation",
+      lender: extractedData.lender || "First National Bank",
+    };
 
-      setExtractedTerms(terms);
-    }
+    setExtractedTerms(terms);
   };
 
-  // Main render for the entire component
+  const toggleExtractedText = () => {
+    setShowExtractedText(!showExtractedText);
+  };
+
   return (
-    <div className="flex mt-36 flex-col w-full max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+    <div className="flex mt-36 flex-col w-full max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg">
       {previewFile ? (
-        // File preview view
         <div className="space-y-4">
           <div className="flex items-center mb-2">
             <button
@@ -307,31 +332,39 @@ const TermSheetUploadPortal = () => {
 
           <div className="flex items-center justify-between border-b pb-4">
             <div className="flex items-center space-x-3">
-              {getFileIcon(previewFile.type)}
+              {previewFile.type === "pdf" && (
+                <FileText className="w-5 h-5 text-red-500" />
+              )}
+              {previewFile.type === "document" && (
+                <FileText className="w-5 h-5 text-blue-500" />
+              )}
+              {previewFile.type === "spreadsheet" && (
+                <FileSpreadsheet className="w-5 h-5 text-green-500" />
+              )}
               <div>
                 <h2 className="text-xl font-bold text-gray-800">
                   {previewFile.name}
                 </h2>
                 <p className="text-sm text-gray-500">
-                  {formatFileSize(previewFile.size)}
+                  {Math.round(previewFile.size / 1024)} KB
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
-              {previewFile.status === "success" && (
-                <Check className="w-5 h-5 text-green-500" />
-              )}
-              {previewFile.status === "error" && (
-                <AlertCircle className="w-5 h-5 text-red-500" />
-              )}
-              <button className="p-2 text-blue-600 hover:text-blue-800 rounded-full hover:bg-blue-50">
-                <Download className="w-5 h-5" />
+            <div className="flex space-x-3">
+              <button
+                onClick={toggleExtractedText}
+                className="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+              >
+                {showExtractedText
+                  ? "Hide Extracted Text"
+                  : "Show Extracted Text"}
               </button>
             </div>
           </div>
 
-          {previewFile.type === "pdf" && pdfUrl ? (
+          {/* PDF Viewer or Alternative Content */}
+          {previewFile.type === "pdf" && pdfUrl && !showExtractedText ? (
             <div className="border rounded-lg p-4 bg-gray-50">
               <div className="flex justify-between items-center mb-4">
                 <div className="flex space-x-2">
@@ -403,13 +436,12 @@ const TermSheetUploadPortal = () => {
                       transformOrigin: "top center",
                     }}
                   >
-                    {/* PDF.js Document viewer */}
                     <Document
                       file={pdfUrl}
                       onLoadSuccess={onDocumentLoadSuccess}
                       onLoadError={onDocumentLoadError}
                       options={{
-                        cMapUrl: `//unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`, // Fix cMapUrl
+                        cMapUrl: `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/cmaps/`,
                         cMapPacked: true,
                       }}
                     >
@@ -423,77 +455,15 @@ const TermSheetUploadPortal = () => {
                   </div>
                 )}
               </div>
-
-              {/* Terms extraction - only show if no error */}
-              {!pdfLoadError && (
-                <div className="mt-6 p-4 bg-white border rounded-lg">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                    Extracted Terms
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <div className="p-3 bg-blue-50 rounded border border-blue-100">
-                        <p className="text-sm font-medium text-gray-700">
-                          Transaction Type
-                        </p>
-                        <p className="text-gray-800">
-                          {extractedTerms?.transactionType ||
-                            "Term Loan Facility"}
-                        </p>
-                      </div>
-                      <div className="p-3 bg-blue-50 rounded border border-blue-100">
-                        <p className="text-sm font-medium text-gray-700">
-                          Principal Amount
-                        </p>
-                        <p className="text-gray-800">
-                          {extractedTerms?.principalAmount || "$25,000,000"}
-                        </p>
-                      </div>
-                      <div className="p-3 bg-blue-50 rounded border border-blue-100">
-                        <p className="text-sm font-medium text-gray-700">
-                          Maturity Date
-                        </p>
-                        <p className="text-gray-800">
-                          {extractedTerms?.maturityDate || "March 15, 2030"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="p-3 bg-blue-50 rounded border border-blue-100">
-                        <p className="text-sm font-medium text-gray-700">
-                          Interest Rate
-                        </p>
-                        <p className="text-gray-800">
-                          {extractedTerms?.interestRate || "SOFR + 3.25%"}
-                        </p>
-                      </div>
-                      <div className="p-3 bg-blue-50 rounded border border-blue-100">
-                        <p className="text-sm font-medium text-gray-700">
-                          Borrower
-                        </p>
-                        <p className="text-gray-800">
-                          {extractedTerms?.borrower || "Acme Corporation"}
-                        </p>
-                      </div>
-                      <div className="p-3 bg-blue-50 rounded border border-blue-100">
-                        <p className="text-sm font-medium text-gray-700">
-                          Lender
-                        </p>
-                        <p className="text-gray-800">
-                          {extractedTerms?.lender || "First National Bank"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-4">
-                    <p className="text-sm text-gray-500">
-                      * These terms have been extracted from the document and
-                      may require verification.
-                    </p>
-                  </div>
-                </div>
-              )}
+            </div>
+          ) : showExtractedText ? (
+            <div className="border rounded-lg p-4 bg-white">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                Extracted Text
+              </h3>
+              <div className="border p-4 bg-gray-50 rounded whitespace-pre-wrap overflow-auto max-h-96">
+                {extractedText || "No text extracted yet."}
+              </div>
             </div>
           ) : (
             <div
@@ -507,47 +477,52 @@ const TermSheetUploadPortal = () => {
                 </h3>
                 <p className="text-gray-500 max-w-md">
                   Preview is currently only available for PDF files. For other
-                  file formats, please process the document to extract terms.
+                  file formats, please use the Show Extracted Text option.
                 </p>
               </div>
             </div>
           )}
 
-          {previewFile.status !== "pending" && (
-            <div className="border-t pt-4 mt-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                Validation Status
+          {/* Extracted Terms Section */}
+          {extractedTerms && (
+            <div className="border rounded-lg p-4 bg-white mt-4">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                Extracted Terms
               </h3>
-              <div
-                className={`p-4 rounded-lg ${
-                  previewFile.status === "success" ? "bg-green-50" : "bg-red-50"
-                }`}
-              >
-                <div className="flex items-start">
-                  {previewFile.status === "success" ? (
-                    <Check className="w-6 h-6 text-green-500 mr-3 mt-1" />
-                  ) : (
-                    <AlertCircle className="w-6 h-6 text-red-500 mr-3 mt-1" />
-                  )}
-                  <div>
-                    <p className="font-semibold text-gray-800">
-                      {previewFile.status === "success"
-                        ? "Document Validated Successfully"
-                        : "Validation Issues Detected"}
-                    </p>
-                    <p className="text-gray-600 mt-1">
-                      {previewFile.status === "success"
-                        ? "All required terms have been identified and match expected patterns."
-                        : "Some terms require manual review or may be missing from the document."}
-                    </p>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-gray-50 p-3 rounded">
+                  <p className="text-sm text-gray-500">Transaction Type</p>
+                  <p className="font-medium">
+                    {extractedTerms.transactionType}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded">
+                  <p className="text-sm text-gray-500">Principal Amount</p>
+                  <p className="font-medium">
+                    {extractedTerms.principalAmount}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded">
+                  <p className="text-sm text-gray-500">Maturity Date</p>
+                  <p className="font-medium">{extractedTerms.maturityDate}</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded">
+                  <p className="text-sm text-gray-500">Interest Rate</p>
+                  <p className="font-medium">{extractedTerms.interestRate}</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded">
+                  <p className="text-sm text-gray-500">Borrower</p>
+                  <p className="font-medium">{extractedTerms.borrower}</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded">
+                  <p className="text-sm text-gray-500">Lender</p>
+                  <p className="font-medium">{extractedTerms.lender}</p>
                 </div>
               </div>
             </div>
           )}
         </div>
       ) : (
-        // Main upload interface
         <>
           <h1 className="text-2xl font-bold text-gray-800 mb-2">
             Term Sheet Validation Portal
@@ -557,7 +532,6 @@ const TermSheetUploadPortal = () => {
             analysis
           </p>
 
-          {/* Upload area */}
           <div
             className={`border-2 border-dashed rounded-lg p-8 mb-6 text-center transition-colors ${
               isDragging
@@ -576,7 +550,7 @@ const TermSheetUploadPortal = () => {
               className="hidden"
               onChange={handleFileChange}
               multiple
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.eml,.msg,.txt,.rtf"
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.eml,.msg,.txt,.rtf,.png,.jpg,.jpeg"
             />
 
             <Upload className="w-16 h-16 mx-auto text-blue-500 mb-4" />
@@ -584,11 +558,10 @@ const TermSheetUploadPortal = () => {
               Drag & drop files here or click to browse
             </h3>
             <p className="text-gray-500">
-              Support for PDF, Word, Excel, Emails, and Text files
+              Support for PDF, Word, Excel, Emails, Text files, and Images
             </p>
           </div>
 
-          {/* File list */}
           {files.length > 0 && (
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-3">
@@ -601,22 +574,23 @@ const TermSheetUploadPortal = () => {
                     className="flex items-center justify-between p-4 hover:bg-gray-50"
                   >
                     <div className="flex items-center space-x-3">
-                      {getFileIcon(file.type)}
+                      {file.type === "pdf" && (
+                        <FileText className="w-5 h-5 text-red-500" />
+                      )}
+                      {file.type === "document" && (
+                        <FileText className="w-5 h-5 text-blue-500" />
+                      )}
+                      {file.type === "spreadsheet" && (
+                        <FileSpreadsheet className="w-5 h-5 text-green-500" />
+                      )}
                       <div>
                         <p className="font-medium text-gray-800">{file.name}</p>
                         <p className="text-sm text-gray-500">
-                          {formatFileSize(file.size)}
+                          {Math.round(file.size / 1024)} KB
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      {file.status === "success" && (
-                        <Check className="w-5 h-5 text-green-500" />
-                      )}
-                      {file.status === "error" && (
-                        <AlertCircle className="w-5 h-5 text-red-500" />
-                      )}
-
                       <button
                         onClick={() => openFilePreview(file)}
                         className="p-1 rounded-full hover:bg-blue-100 text-blue-600"
@@ -624,19 +598,15 @@ const TermSheetUploadPortal = () => {
                       >
                         <Eye className="w-5 h-5" />
                       </button>
-
-                      {file.status === "pending" && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeFile(file.id);
-                          }}
-                          className="p-1 rounded-full hover:bg-gray-200 ml-1"
-                          title="Remove file"
-                        >
-                          <X className="w-5 h-5 text-gray-500" />
-                        </button>
-                      )}
+                      <button
+                        onClick={() =>
+                          setFiles(files.filter((f) => f.id !== file.id))
+                        }
+                        className="p-1 rounded-full hover:bg-gray-200 ml-1"
+                        title="Remove file"
+                      >
+                        <X className="w-5 h-5 text-gray-500" />
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -644,7 +614,6 @@ const TermSheetUploadPortal = () => {
             </div>
           )}
 
-          {/* Action buttons */}
           <div className="flex justify-end space-x-4">
             <button
               className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
@@ -669,37 +638,6 @@ const TermSheetUploadPortal = () => {
                 : "Validate Term Sheets"}
             </button>
           </div>
-
-          {/* Processing status */}
-          {processingStatus === "completed" && (
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                Processing Results
-              </h3>
-              <div className="flex space-x-8">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-blue-600">
-                    {files.length}
-                  </p>
-                  <p className="text-sm text-gray-600">Files Processed</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-green-600">
-                    {files.filter((f) => f.status === "success").length}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Successfully Validated
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-red-600">
-                    {files.filter((f) => f.status === "error").length}
-                  </p>
-                  <p className="text-sm text-gray-600">Require Attention</p>
-                </div>
-              </div>
-            </div>
-          )}
         </>
       )}
     </div>

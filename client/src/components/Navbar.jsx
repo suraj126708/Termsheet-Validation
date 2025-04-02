@@ -31,7 +31,7 @@ const NavBar = ({ id }) => {
   console.log(fileName);
 
   const profilePicUrl = fileName
-    ? `http://localhost:8000/uploads/${fileName}`
+    ? `https://termsheet-validation-api.onrender.com/uploads/${fileName}`
     : "https://flowbite.com/docs/images/people/profile-picture-3.jpg";
 
   return (

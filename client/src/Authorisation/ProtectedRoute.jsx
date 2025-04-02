@@ -7,7 +7,11 @@ const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useContext(AuthContext);
 
   if (isAuthenticated === null) {
-    return <div>Loading...</div>;
+    return (
+      <div className="h-screen w-full items-center justify-center justify-items-center text-center">
+        Loading...
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
