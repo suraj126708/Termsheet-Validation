@@ -619,6 +619,7 @@ const TermSheetUploadPortal = () => {
             <a
               href="https://www.sec.gov/Archives/edgar/data/1409197/000121390019013304/f8k071919ex99-1_bespoke.htm"
               className="underline text-blue-800 font-bold"
+              target="_blank"
             >
               {" "}
               Link
