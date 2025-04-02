@@ -97,7 +97,7 @@ function RegisterPage() {
 
     setLoading(true);
 
-    const url = "https://termsheet-validation-api.onrender.com/auth/signup";
+    const url = "http://localhost:8000/auth/signup";
 
     const formDataToSend = new FormData();
     Object.keys(formData).forEach((key) => {

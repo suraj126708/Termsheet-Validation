@@ -13,6 +13,6 @@ const userSchema = new Schema({
   profilePicture: { type: String },
 });
 
-const userModel = mongoose.model("User", userSchema);
+const userModel = mongoose.model("constomerr", userSchema);
 
 module.exports = userModel;

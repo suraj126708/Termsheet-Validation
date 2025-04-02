@@ -6,9 +6,14 @@ const path = require("path");
 // Sign Up Controller
 const signUp = async (req, res) => {
   try {
+    console.log("Request body:", req.body); // Log the request body
+    console.log("Request file:", req.file); // Log the uploaded file
+
     const { name, email, password, contact, address, age, gender } = req.body;
 
     const existingUser = await userModel.findOne({ email });
+    console.log("Existing user:", existingUser); // Log if the user already exists
+
     if (existingUser) {
       return res
         .status(409)
@@ -16,10 +21,12 @@ const signUp = async (req, res) => {
     }
 
     if (!req.file) {
+      console.log("Profile picture is missing"); // Log missing profile picture
       return res.status(400).json({ message: "Profile picture is required" });
     }
 
     const profilePicture = req.file.path;
+    console.log("Profile picture path:", profilePicture); // Log the profile picture path
 
     const newUser = new userModel({
       name,
@@ -32,14 +39,17 @@ const signUp = async (req, res) => {
       profilePicture,
     });
 
+    console.log("New user object:", newUser); // Log the new user object before saving
+
     await newUser.save();
+    console.log("User saved successfully"); // Log successful save
 
     res.status(201).json({
       message: "User created successfully",
       success: true,
     });
   } catch (err) {
-    console.error(err);
+    console.error("Error during sign up:", err); // Log the error
     res.status(500).json({
       message: "Error creating user",
       success: false,
