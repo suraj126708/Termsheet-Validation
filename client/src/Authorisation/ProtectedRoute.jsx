@@ -5,6 +5,7 @@ import AuthContext from "./AuthProvider";
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useContext(AuthContext);
+  console.log("isAuthenticated:", isAuthenticated);
 
   if (isAuthenticated === null) {
     return (
@@ -17,7 +18,7 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  if (!isAuthenticated) {
+  if (isAuthenticated === null) {
     return <Navigate to="/login" />;
   }
 

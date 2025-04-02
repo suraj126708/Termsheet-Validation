@@ -614,6 +614,17 @@ const TermSheetUploadPortal = () => {
             </div>
           )}
 
+          <div className="flex items-center mb-4">
+            <p>Download sample Termsheet From: </p>
+            <a
+              href="https://www.sec.gov/Archives/edgar/data/1409197/000121390019013304/f8k071919ex99-1_bespoke.htm"
+              className="underline text-blue-800 font-bold"
+            >
+              {" "}
+              Link
+            </a>
+          </div>
+
           <div className="flex justify-end space-x-4">
             <button
               className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"

@@ -23,22 +23,23 @@ function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/extract" element={<PDFTextExtractor />} />
+            {/* <Route path="/extract" element={<PDFTextExtractor />} /> */}
 
-            <Route
+            {/* <Route
               path="/upload"
               element={
-                <ProtectedRoute>
-                  <TermSheetUploadPortal />
-                </ProtectedRoute>
+                // <ProtectedRoute>
+                <TermSheetUploadPortal />
+                // </ProtectedRoute>
               }
-            />
+            /> */}
+
             <Route
               path="/"
               element={
-                <ProtectedRoute>
-                  <HeroPage />
-                </ProtectedRoute>
+                // <ProtectedRoute>
+                <TermSheetUploadPortal />
+                // </ProtectedRoute>
               }
             />
             <Route path="*" element={<Navigate to="/login" />} />
