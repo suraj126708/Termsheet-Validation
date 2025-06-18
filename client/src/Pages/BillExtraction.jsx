@@ -56,7 +56,7 @@ const BillExtractor = () => {
 
     try {
       const response = await fetch(
-        "https://fuel-bill-extraction-usingllm.onrender.com/upload",
+        "https://fuel-bill-extraction-usingllm-1.onrender.com/upload",
         {
           method: "POST",
           body: formData,
