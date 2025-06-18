@@ -55,10 +55,13 @@ const BillExtractor = () => {
     });
 
     try {
-      const response = await fetch("http://localhost:5000/upload", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        "https://fuel-bill-extraction-usingllm.onrender.com/upload",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
